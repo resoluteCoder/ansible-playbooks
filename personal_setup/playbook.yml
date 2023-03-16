@@ -1,0 +1,49 @@
+---
+- name: Playbook to setup my personal machine
+  hosts: localhost
+  vars:
+    personal_dir: "~/stuff"
+  tasks:
+    - name: install vscode key and repo
+      become: true
+      ansible.builtin.shell: "{{ item }}"
+      loop:
+        - sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+        - sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo'
+
+    - name: install packages
+      become: true
+      ansible.builtin.dnf:
+        name:
+          - vim-enhanced
+          - tmux
+          - nodejs
+          - code
+
+    - name: setup directory structure
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+      loop:
+        - "{{ personal_dir }}"
+        - "{{ personal_dir }}/projects"
+        - "{{ personal_dir }}/notes"
+
+
+    - name: Setup dotfiles
+      block:
+        - name: pull dotfiles
+          ansible.builtin.git:
+            repo: "git@github.com:resoluteCoder/dotfiles.git"
+            dest: "{{ personal_dir }}/dotfiles"
+
+        - name: symlink dotfiles
+          ansible.builtin.file:
+            src: "{{ personal_dir }}/dotfiles/{{ item }}"
+            dest: "~/.{{ item }}"
+            state: link
+            force: true
+          loop:
+            - "bashrc"
+            - "vimrc"
+            - "tmux.conf"

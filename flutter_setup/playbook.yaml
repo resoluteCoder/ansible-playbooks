@@ -1,0 +1,39 @@
+---
+- name: Install flutter on fedora
+  hosts: localhost
+  tasks:
+    - name: Install required packages
+      become: true
+      ansible.builtin.dnf:
+        name:
+          - git
+          - mesa-libGLU
+          - clang
+          - cmake
+          - ninja-build
+          - pkg-config
+          - gtk3-devel
+          - gstreamer1-devel
+          - clutter-devel
+          - webkit2gtk3-devel
+          - libgda-devel
+          - gobject-introspection-devel
+
+    - name: Download latest stable release
+      block:
+        - name: Create flutter sdk dir
+          ansible.builtin.file:
+            path: ~/flutter-sdk
+            state: directory
+
+        - name: Retrieve and untar flutter sdk
+          ansible.builtin.unarchive:
+            src: https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.7.7-stable.tar.xz
+            dest: ~/flutter-sdk/
+            remote_src: true
+            creates: ~/flutter-sdk/flutter/bin
+
+    - name: Add flutter to path
+      ansible.builtin.lineinfile:
+        path: ~/.bashrc
+        line: 'export PATH="$PATH:~/flutter-sdk/flutter/bin"'
