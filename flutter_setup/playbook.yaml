@@ -4,7 +4,6 @@
   tasks:
     - name: Install required packages
       become: true
-      when: false
       ansible.builtin.dnf:
         name:
           - git
